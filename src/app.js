@@ -14,18 +14,19 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// CORS: permitir localhost y frontend en Render
+// CORS: permitir localhost y frontend desplegado en Render
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5175",
-  "https://mi-frontend.onrender.com" // <-- reemplazá con tu URL pública
+  "https://mi-frontend.onrender.com",                 // tu frontend local en Render
+  "https://proyectopern-1-frontend.onrender.com"     // frontend ya desplegado en Render
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true); // Postman, curl
     if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error('CORS policy: Origin not allowed'));
+    return callback(new Error("CORS policy: Origin not allowed"));
   },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true
@@ -42,7 +43,7 @@ app.options("*", cors({
 app.get("/", (req, res) => res.json({ message: "Bienvenidos a mi proyecto" }));
 app.get("/api/ping", async (req, res) => {
   try {
-    const result = await Pool.query('SELECT NOW()');
+    const result = await Pool.query("SELECT NOW()");
     res.json(result.rows[0]);
   } catch (err) {
     console.error("Error en DB:", err);
@@ -50,13 +51,13 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-
 // Rutas principales
-app.use('/api', tareasRoutes);
-app.use('/api', authRoutes);
+app.use("/api", tareasRoutes);
+app.use("/api", authRoutes);
 
 // Manejo de errores
 app.use((err, req, res, next) => {
+  console.error("Error global:", err.message);
   res.status(500).json({
     status: "error",
     message: err.message
