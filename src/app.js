@@ -21,24 +21,19 @@ const allowedOrigins = [
   "https://proyectopern-1-frontend.onrender.com"
 ];
 
-// Configuración CORS
+// Configuración CORS (lista blanca)
+// Usamos la lista `allowedOrigins` directamente: la librería `cors` acepta un array
+// y, cuando el origen está en la lista, añade los headers apropiados. Esto evita
+// lanzar un Error que convertía la preflight en 500.
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // solicitudes sin origen (Postman, curl)
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    console.log("Intento de acceso desde origen no permitido:", origin);
-    return callback(new Error("CORS policy: Origin not allowed"));
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-}));
-
-// Manejo de preflight requests
-app.options("*", cors({
   origin: allowedOrigins,
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
+
+// Responder a preflight de forma genérica (usa la misma configuración)
+app.options("*", cors({ origin: allowedOrigins, credentials: true }));
 
 // Rutas de prueba
 app.get("/", (req, res) => res.json({ message: "Bienvenidos a mi proyecto" }));
