@@ -18,24 +18,26 @@ app.use(express.urlencoded({ extended: false }));
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5175",
-  "https://mi-frontend.onrender.com",
-  "https://proyectopern-1-frontend.onrender.com"
+  "https://proyectopern-1-frontend.onrender.com" // reemplaza con tu URL de frontend
 ];
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // Postman, curl
+// Configuración CORS para todas las rutas
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // Postman, curl o server-to-server
     if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error("CORS no permitido"));
+    return callback(new Error("CORS policy: Origin not allowed"));
   },
-  credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  optionsSuccessStatus: 200
-};
+  credentials: true
+}));
 
-// Manejar preflight requests globalmente
-app.options("*", cors(corsOptions));
-app.use(cors(corsOptions));
+// Manejar preflight requests
+app.options("*", cors({
+  origin: allowedOrigins,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true
+}));
 
 // Rutas de prueba
 app.get("/", (req, res) => res.json({ message: "Bienvenidos a mi proyecto" }));
@@ -54,7 +56,7 @@ app.get("/api/ping", async (req, res) => {
 app.use("/api", tareasRoutes);
 app.use("/api", authRoutes);
 
-// Manejo de errores global
+// Manejo global de errores
 app.use((err, req, res, next) => {
   console.error("Error global:", err.message);
   res.status(500).json({
