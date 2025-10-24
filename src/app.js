@@ -22,23 +22,20 @@ const allowedOrigins = [
   "https://proyectopern-1-frontend.onrender.com"
 ];
 
-app.use(cors({
-  origin: function(origin, callback) {
-    // Permitir requests sin origin (ej: Postman, curl)
-    if (!origin) return callback(null, true);
-
-    // Permitir solo los orígenes listados
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      return callback(null, true);
-    }
-
-    // Denegar los demás
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true); // Postman, curl
+    if (allowedOrigins.includes(origin)) return callback(null, true);
     return callback(new Error("CORS no permitido"));
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  optionsSuccessStatus: 200 // para que la preflight devuelva 200
-}));
+  optionsSuccessStatus: 200
+};
+
+// Manejar preflight requests globalmente
+app.options("*", cors(corsOptions));
+app.use(cors(corsOptions));
 
 // Rutas de prueba
 app.get("/", (req, res) => res.json({ message: "Bienvenidos a mi proyecto" }));
@@ -57,7 +54,7 @@ app.get("/api/ping", async (req, res) => {
 app.use("/api", tareasRoutes);
 app.use("/api", authRoutes);
 
-// Manejo de errores
+// Manejo de errores global
 app.use((err, req, res, next) => {
   console.error("Error global:", err.message);
   res.status(500).json({
