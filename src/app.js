@@ -41,9 +41,15 @@ app.options("*", cors({
 // Rutas de prueba
 app.get("/", (req, res) => res.json({ message: "Bienvenidos a mi proyecto" }));
 app.get("/api/ping", async (req, res) => {
-  const result = await Pool.query('SELECT NOW()');
-  res.json(result.rows[0]);
+  try {
+    const result = await Pool.query('SELECT NOW()');
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Error en DB:", err);
+    res.status(500).json({ error: "No se pudo conectar a la DB" });
+  }
 });
+
 
 // Rutas principales
 app.use('/api', tareasRoutes);
