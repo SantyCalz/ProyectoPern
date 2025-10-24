@@ -14,34 +14,35 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// CORS: tomar desde variable de entorno ALLOWED_ORIGINS o usar valores por defecto
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(",").map(origin => origin.trim())
-  : [
-      "http://localhost:5173",
-      "http://localhost:5175",
-      "https://proyectopern-1-frontend.onrender.com"
-    ];
+// CORS: permitir localhost y frontend desplegado en Render
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5175",
+  "https://mi-frontend.onrender.com",
+  "https://proyectopern-1-frontend.onrender.com"
+];
 
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // solicitudes sin origen (Postman, curl)
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error("CORS policy: Origin not allowed"));
-  },
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true
-}));
+  origin: function(origin, callback) {
+    // Permitir requests sin origin (ej: Postman, curl)
+    if (!origin) return callback(null, true);
 
-// Manejar preflight requests
-app.options("*", cors({
-  origin: allowedOrigins,
+    // Permitir solo los orígenes listados
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    }
+
+    // Denegar los demás
+    return callback(new Error("CORS no permitido"));
+  },
+  credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true
+  optionsSuccessStatus: 200 // para que la preflight devuelva 200
 }));
 
 // Rutas de prueba
 app.get("/", (req, res) => res.json({ message: "Bienvenidos a mi proyecto" }));
+
 app.get("/api/ping", async (req, res) => {
   try {
     const result = await Pool.query("SELECT NOW()");
@@ -56,7 +57,7 @@ app.get("/api/ping", async (req, res) => {
 app.use("/api", tareasRoutes);
 app.use("/api", authRoutes);
 
-// Manejo de errores global
+// Manejo de errores
 app.use((err, req, res, next) => {
   console.error("Error global:", err.message);
   res.status(500).json({
