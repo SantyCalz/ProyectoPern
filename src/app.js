@@ -14,17 +14,18 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// CORS: permitir localhost y frontend desplegado en Render
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:5175",
-  "https://mi-frontend.onrender.com",                 // tu frontend local en Render
-  "https://proyectopern-1-frontend.onrender.com"     // frontend ya desplegado en Render
-];
+// CORS: tomar desde variable de entorno ALLOWED_ORIGINS o usar valores por defecto
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map(origin => origin.trim())
+  : [
+      "http://localhost:5173",
+      "http://localhost:5175",
+      "https://proyectopern-1-frontend.onrender.com"
+    ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // Postman, curl
+    if (!origin) return callback(null, true); // solicitudes sin origen (Postman, curl)
     if (allowedOrigins.includes(origin)) return callback(null, true);
     return callback(new Error("CORS policy: Origin not allowed"));
   },
@@ -55,7 +56,7 @@ app.get("/api/ping", async (req, res) => {
 app.use("/api", tareasRoutes);
 app.use("/api", authRoutes);
 
-// Manejo de errores
+// Manejo de errores global
 app.use((err, req, res, next) => {
   console.error("Error global:", err.message);
   res.status(500).json({
