@@ -18,7 +18,9 @@ app.use(express.urlencoded({ extended: false }));
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5175",
-  "https://proyectopern-1-frontend.onrender.com"
+  "https://proyectopern-1-frontend.onrender.com",
+  // Origin exacto que muestra tu navegador (render):
+  "https://proyectopern-1-front.onrender.com"
 ];
 
 // Configuración CORS (lista blanca)
