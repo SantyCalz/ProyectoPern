@@ -14,30 +14,33 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// CORS: permitir localhost y frontend desplegado en Render
 const allowedOrigins = [
-  "http://localhost:5173",
+  process.env.VITE_FRONTEND || "http://localhost:5173",
   "http://localhost:5175",
-  "https://proyectopern-1-frontend.onrender.com" // reemplaza con tu URL de frontend
+  "https://proyectopern-1-frontend.onrender.com"
 ];
 
-// Configuración CORS para todas las rutas
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // Postman, curl o server-to-server
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error("CORS policy: Origin not allowed"));
-  },
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true
-}));
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  console.log("Origin recibido:", origin); // <-- esto ayuda a depurar
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, DELETE, OPTIONS"
+    );
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept"
+    );
+  }
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
-// Manejar preflight requests
-app.options("*", cors({
-  origin: allowedOrigins,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true
-}));
 
 // Rutas de prueba
 app.get("/", (req, res) => res.json({ message: "Bienvenidos a mi proyecto" }));
